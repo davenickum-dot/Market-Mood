@@ -589,6 +589,9 @@
     }
   }
 
+  /**
+   * Fetches and populates the Sector Mojo table using GViz JSON with explicit P/E coloring.
+   */
   function renderSectorMojo(rows) {
     const tbody = document.getElementById('sector-mojo-tbody');
     tbody.innerHTML = '';
@@ -598,36 +601,44 @@
       return;
     }
 
-    // First pass: locate S&P 500 row to get benchmark market P/E values
+    // Helper function to safely extract numbers from Google Sheet cell objects
+    const parseCellNum = (cell) => {
+      if (!cell || cell.v === null || cell.v === undefined) return null;
+      const num = parseFloat(String(cell.v).replace(/[\$,]/g, ''));
+      return isNaN(num) ? null : num;
+    };
+
+    // First pass: locate S&P 500 row to extract benchmark market P/E values
     let sp500CurrPE = null;
     let sp500ForePE = null;
 
     for (let i = 1; i < rows.length; i++) {
       const c = rows[i].c;
       if (!c || c.length < 6) continue;
-      const sectorName = c[0] ? (c[0].v || c[0].f || '') : '';
+      const sectorName = String(c[0] ? (c[0].v || c[0].f || '') : '').trim();
+      
       if (sectorName.toUpperCase().includes("S&P 500")) {
-        sp500CurrPE = c[4] && c[4].v !== null ? Number(c[4].v) : null;
-        sp500ForePE = c[5] && c[5].v !== null ? Number(c[5].v) : null;
+        sp500CurrPE = parseCellNum(c[4]);
+        sp500ForePE = parseCellNum(c[5]);
         break;
       }
     }
 
-    // Second pass: render all rows with conditional relative value coloring
+    // Second pass: render all rows with enforced conditional relative value coloring
     for (let i = 1; i < rows.length; i++) {
       const c = rows[i].c;
       if (!c || c.length < 6) continue;
 
-      const sector = c[0] ? (c[0].v || c[0].f || '') : '';
+      const sector = String(c[0] ? (c[0].v || c[0].f || '') : '').trim();
       const neutralWeight = c[1] ? (c[1].f || c[1].v || '-') : '-';
       const myPortfolio = c[2] ? (c[2].f || c[2].v || '-') : '-';
       const exposure = c[3] ? String(c[3].v || '').trim() : '-';
       
-      const currVal = c[4] && c[4].v !== null ? Number(c[4].v) : null;
-      const foreVal = c[5] && c[5].v !== null ? Number(c[5].v) : null;
+      const currVal = parseCellNum(c[4]);
+      const foreVal = parseCellNum(c[5]);
 
-      const currentPE = currVal !== null ? currVal.toFixed(1) : 'N/A';
-      const forecastedPE = foreVal !== null ? foreVal.toFixed(1) : 'N/A';
+      const currentPEText = currVal !== null ? currVal.toFixed(1) : 'N/A';
+      const forecastedPEText = foreVal !== null ? foreVal.toFixed(1) : 'N/A';
 
       const isSP500 = sector.toUpperCase().includes("S&P 500");
       const tr = document.createElement("tr");
@@ -638,25 +649,25 @@
         tr.style.backgroundColor = "rgba(255, 255, 255, 0.02)";
       }
 
-      // Format exposure badges
+      // Exposure Level Badge Styling
       let badgeClass = "none";
       const expLower = exposure.toLowerCase();
       if (expLower === "overweight") badgeClass = "overweight";
       else if (expLower === "underweight") badgeClass = "underweight";
       else if (expLower === "neutral") badgeClass = "neutral";
 
-      // Relative Valuation P/E Color Rules
-      let currColorStyle = "color: var(--text-main);";
-      let foreColorStyle = "color: var(--text-main);";
+      // Relative Valuation P/E Color Rules (Green = Below Market, Red = Above Market)
+      let currColor = "var(--text-main)";
+      let foreColor = "var(--text-main)";
 
       if (!isSP500) {
         if (currVal !== null && sp500CurrPE !== null) {
-          if (currVal < sp500CurrPE) currColorStyle = "color: var(--accent-green); font-weight: 600;";
-          else if (currVal > sp500CurrPE) currColorStyle = "color: var(--accent-red); font-weight: 600;";
+          if (currVal < sp500CurrPE) currColor = "#00e676"; // Green (Cheaper than market)
+          else if (currVal > sp500CurrPE) currColor = "#ff4d4d"; // Red (More expensive)
         }
         if (foreVal !== null && sp500ForePE !== null) {
-          if (foreVal < sp500ForePE) foreColorStyle = "color: var(--accent-green); font-weight: 600;";
-          else if (foreVal > sp500ForePE) foreColorStyle = "color: var(--accent-red); font-weight: 600;";
+          if (foreVal < sp500ForePE) foreColor = "#00e676"; // Green (Cheaper than market)
+          else if (foreVal > sp500ForePE) foreColor = "#ff4d4d"; // Red (More expensive)
         }
       }
 
@@ -667,8 +678,8 @@
         <td style="text-align: center;">
           ${isSP500 ? '-' : `<span class="mojo-badge ${badgeClass}">${exposure}</span>`}
         </td>
-        <td style="text-align: right; ${currColorStyle}">${currentPE}</td>
-        <td style="text-align: right; ${foreColorStyle}">${forecastedPE}</td>
+        <td style="text-align: right; color: ${currColor} !important; font-weight: 600;">${currentPEText}</td>
+        <td style="text-align: right; color: ${foreColor} !important; font-weight: 600;">${forecastedPEText}</td>
       `;
 
       tbody.appendChild(tr);
