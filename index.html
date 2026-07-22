@@ -465,3 +465,64 @@
 
 </body>
 </html>
+<!-- Sector Mojo Section -->
+<section id="sector-mojo-container" style="margin-top: 30px; font-family: sans-serif;">
+  <h2 style="border-bottom: 2px solid #333; padding-bottom: 5px;">Sector Mojo</h2>
+  <table id="sector-mojo-table" style="width: 100%; border-collapse: collapse; text-align: left;">
+    <thead>
+      <tr style="background-color: #f2f2f2; border-bottom: 2px solid #ddd;">
+        <th style="padding: 10px;">Sector</th>
+        <th style="padding: 10px;">S&P 500 Neutral Weight</th>
+        <th style="padding: 10px;">My Portfolio %</th>
+        <th style="padding: 10px;">Exposure Level</th>
+        <th style="padding: 10px;">Current P/E</th>
+        <th style="padding: 10px;">Forecasted P/E</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Dynamically populated from Google Sheet published CSV/JSON endpoint -->
+    </tbody>
+  </table>
+</section>
+
+<script>
+  /**
+   * Fetches the published Sector Mojo CSV data from Google Sheets and renders the HTML table.
+   */
+  async function loadSectorMojoTable() {
+    const publishedCsvUrl = "YOUR_PUBLISHED_GOOGLE_SHEET_CSV_URL_HERE";
+    try {
+      const response = await fetch(publishedCsvUrl);
+      const data = await response.text();
+      const rows = data.split('\n').map(row => row.split(','));
+      
+      const tbody = document.querySelector("#sector-mojo-table tbody");
+      tbody.innerHTML = "";
+
+      // Skip header row (index 0)
+      for (let i = 1; i < rows.length; i++) {
+        if (rows[i].length < 6) continue;
+        const tr = document.createElement("tr");
+        tr.style.borderBottom = "1px solid #eee";
+        
+        // Highlight S&P 500 total row
+        if (rows[i][0].trim() === "S&P 500") {
+          tr.style.fontWeight = "bold";
+          tr.style.backgroundColor = "#fafafa";
+        }
+
+        rows[i].forEach(cellText => {
+          const td = document.createElement("td");
+          td.style.padding = "8px 10px";
+          td.textContent = cellText.replace(/^"|"$/g, '').trim();
+          tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      }
+    } catch (err) {
+      console.error("Failed to load Sector Mojo table data:", err);
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", loadSectorMojoTable);
+</script>
