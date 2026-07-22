@@ -15,6 +15,10 @@
       --text-muted: #8b95a5;
       --accent-red: #ff4d4d;
       --accent-red-bg: rgba(255, 77, 77, 0.12);
+      --accent-green: #00e676;
+      --accent-green-bg: rgba(0, 230, 118, 0.12);
+      --accent-blue: #38bdf8;
+      --accent-blue-bg: rgba(56, 189, 248, 0.12);
       --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
 
@@ -222,6 +226,75 @@
       font-weight: 600;
     }
 
+    /* Sector Mojo Table Specific Styling */
+    .mojo-table-wrapper {
+      overflow-x: auto;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      margin-top: 10px;
+    }
+
+    .mojo-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.85rem;
+    }
+
+    .mojo-table thead tr {
+      background: #1f242d;
+      color: #38bdf8;
+      text-transform: uppercase;
+      font-size: 0.75rem;
+      letter-spacing: 0.5px;
+    }
+
+    .mojo-table th {
+      padding: 12px 14px;
+      font-weight: 700;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .mojo-table td {
+      padding: 10px 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      color: var(--text-main);
+    }
+
+    .mojo-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-align: center;
+      text-transform: uppercase;
+    }
+
+    .mojo-badge.overweight {
+      background-color: var(--accent-green-bg);
+      color: var(--accent-green);
+      border: 1px solid rgba(0, 230, 118, 0.3);
+    }
+
+    .mojo-badge.underweight {
+      background-color: var(--accent-red-bg);
+      color: var(--accent-red);
+      border: 1px solid rgba(255, 77, 77, 0.3);
+    }
+
+    .mojo-badge.neutral {
+      background-color: var(--accent-blue-bg);
+      color: var(--accent-blue);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+    }
+
+    .mojo-badge.none {
+      background-color: rgba(255, 255, 255, 0.05);
+      color: var(--text-muted);
+      border: 1px solid var(--border-color);
+    }
+
     /* Footer / Guide */
     footer {
       margin-top: 10px;
@@ -342,36 +415,74 @@
     </table>
   </div>
 
+  <!-- Sector Mojo Section (Directly below Interpretation Guide) -->
+  <div class="card">
+    <div class="section-title" style="display: flex; justify-content: space-between; align-items: center;">
+      <span>SECTOR MOJO</span>
+      <span id="mojo-status" style="font-size: 0.7rem; color: var(--text-muted); font-weight: normal;">Loading feed...</span>
+    </div>
+
+    <div class="mojo-table-wrapper">
+      <table class="mojo-table">
+        <thead>
+          <tr>
+            <th>Sector</th>
+            <th style="text-align: right;">S&amp;P 500 Neutral Weight</th>
+            <th style="text-align: right;">My Portfolio %</th>
+            <th style="text-align: center;">Exposure Level</th>
+            <th style="text-align: right;">Current P/E</th>
+            <th style="text-align: right;">Forecasted P/E</th>
+          </tr>
+        </thead>
+        <tbody id="sector-mojo-tbody">
+          <tr>
+            <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 20px;">Loading Sector Mojo data...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
   <footer>
     Data sourced live from Google Sheet via gviz JSON API. Refreshes automatically every 60 seconds.
   </footer>
 </div>
 
 <script>
-  // Replace YOUR_GOOGLE_SHEET_ID with your actual Google Sheet ID
-  const SPREADSHEET_ID = 'YOUR_GOOGLE_SHEET_ID';
-  const GVIZ_URL = `https://docs.google.com/spreadsheets/d/1n3wCfT_IczfPVaOkkT7ukGJJbcoMbOu0EulV82KOYrE/gviz/tq?tqx=out:json`;
+  const SPREADSHEET_ID = '1n3wCfT_IczfPVaOkkT7ukGJJbcoMbOu0EulV82KOYrE';
+  
+  // GViz endpoints for Mood tab and Sector Mojo tab
+  const GVIZ_MOOD_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json&sheet=Mood`;
+  const GVIZ_MOJO_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json&sheet=Sector%20Mojo`;
 
   let chartInstance = null;
 
-  async function fetchData() {
+  /**
+   * Fetches Mood and Sector Mojo datasets simultaneously.
+   */
+  async function fetchAllData() {
+    fetchMoodData();
+    fetchSectorMojoData();
+  }
+
+  /**
+   * Fetches and renders QQQ options skew data.
+   */
+  async function fetchMoodData() {
     try {
-      const response = await fetch(GVIZ_URL);
+      const response = await fetch(GVIZ_MOOD_URL);
       const text = await response.text();
       
-      // Parse the gviz JSON response wrapper
       const jsonString = text.substring(47, text.length - 2);
       const data = JSON.parse(jsonString);
       
-      processData(data.table.rows);
+      processMoodData(data.table.rows);
     } catch (err) {
-      console.error("Error fetching Google Sheet data:", err);
+      console.error("Error fetching Mood data:", err);
     }
   }
 
-  function processData(rows) {
-    // Map Google Sheet rows into objects
-    // Assuming columns: Date (0), Put IV (1), Call IV (2), Spread (3), Ratio (4), Regime (5), QQQ Price (6)
+  function processMoodData(rows) {
     const parsedData = rows.map(r => {
       const c = r.c;
       return {
@@ -383,11 +494,10 @@
         regime: c[5] ? c[5].v : 'Fear Premium',
         qqq: c[6] ? c[6].v : 0
       };
-    }).reverse(); // Most recent first for display
+    }).reverse();
 
     if (parsedData.length === 0) return;
 
-    // Update Hero & Metrics with latest row
     const latest = parsedData[0];
     document.getElementById('regime-badge').innerText = latest.regime.toUpperCase();
     document.getElementById('latest-spread').innerText = (latest.spread > 0 ? '+' : '') + Number(latest.spread).toFixed(1);
@@ -397,11 +507,9 @@
     document.getElementById('skew-ratio').innerText = Number(latest.ratio).toFixed(2);
     document.getElementById('qqq-price').innerText = '$' + Number(latest.qqq).toFixed(2);
     
-    // Update timestamp
     const now = new Date();
     document.getElementById('last-updated').innerText = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ', ' + now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-    // Populate Table
     const tbody = document.getElementById('history-tbody');
     tbody.innerHTML = parsedData.slice(0, 10).map(row => `
       <tr>
@@ -415,7 +523,6 @@
       </tr>
     `).join('');
 
-    // Update Line Chart (Chronological order: Left to Right)
     const chartData = [...parsedData.slice(0, 10)].reverse();
     renderChart(chartData.map(d => d.date), chartData.map(d => d.spread));
   }
@@ -458,71 +565,88 @@
     });
   }
 
+  /**
+   * Fetches and populates the Sector Mojo table using GViz JSON.
+   */
+  async function fetchSectorMojoData() {
+    try {
+      const response = await fetch(GVIZ_MOJO_URL);
+      const text = await response.text();
+      
+      const jsonString = text.substring(47, text.length - 2);
+      const data = JSON.parse(jsonString);
+      
+      renderSectorMojo(data.table.rows);
+    } catch (err) {
+      console.error("Error fetching Sector Mojo data:", err);
+      document.getElementById('sector-mojo-tbody').innerHTML = `
+        <tr>
+          <td colspan="6" style="text-align:center; color: var(--accent-red); padding: 15px;">
+            Failed to load Sector Mojo feed.
+          </td>
+        </tr>
+      `;
+    }
+  }
+
+  function renderSectorMojo(rows) {
+    const tbody = document.getElementById('sector-mojo-tbody');
+    tbody.innerHTML = '';
+
+    if (!rows || rows.length <= 1) {
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:15px;">No Sector Mojo data available.</td></tr>`;
+      return;
+    }
+
+    // Skip header row (index 0)
+    for (let i = 1; i < rows.length; i++) {
+      const c = rows[i].c;
+      if (!c || c.length < 6) continue;
+
+      const sector = c[0] ? (c[0].v || c[0].f || '') : '';
+      const neutralWeight = c[1] ? (c[1].f || c[1].v || '-') : '-';
+      const myPortfolio = c[2] ? (c[2].f || c[2].v || '-') : '-';
+      const exposure = c[3] ? String(c[3].v || '').trim() : '-';
+      const currentPE = c[4] ? (c[4].v !== null ? Number(c[4].v).toFixed(1) : 'N/A') : 'N/A';
+      const forecastedPE = c[5] ? (c[5].v !== null ? Number(c[5].v).toFixed(1) : 'N/A') : 'N/A';
+
+      const isSP500 = sector.toUpperCase().includes("S&P 500");
+      const tr = document.createElement("tr");
+
+      if (isSP500) {
+        tr.style.fontWeight = "700";
+        tr.style.borderTop = "2px solid var(--border-color)";
+        tr.style.backgroundColor = "rgba(255, 255, 255, 0.02)";
+      }
+
+      // Format exposure badges
+      let badgeClass = "none";
+      const expLower = exposure.toLowerCase();
+      if (expLower === "overweight") badgeClass = "overweight";
+      else if (expLower === "underweight") badgeClass = "underweight";
+      else if (expLower === "neutral") badgeClass = "neutral";
+
+      tr.innerHTML = `
+        <td style="font-weight: ${isSP500 ? '700' : '600'};">${sector}</td>
+        <td style="text-align: right;">${neutralWeight}</td>
+        <td style="text-align: right;">${myPortfolio}</td>
+        <td style="text-align: center;">
+          ${isSP500 ? '-' : `<span class="mojo-badge ${badgeClass}">${exposure}</span>`}
+        </td>
+        <td style="text-align: right;">${currentPE}</td>
+        <td style="text-align: right;">${forecastedPE}</td>
+      `;
+
+      tbody.appendChild(tr);
+    }
+
+    document.getElementById('mojo-status').innerText = 'Live Feed Active';
+  }
+
   // Initial load & 60-second auto-refresh
-  fetchData();
-  setInterval(fetchData, 60000);
+  fetchAllData();
+  setInterval(fetchAllData, 60000);
 </script>
 
 </body>
 </html>
-<!-- Sector Mojo Section -->
-<section id="sector-mojo-container" style="margin-top: 30px; font-family: sans-serif;">
-  <h2 style="border-bottom: 2px solid #333; padding-bottom: 5px;">Sector Mojo</h2>
-  <table id="sector-mojo-table" style="width: 100%; border-collapse: collapse; text-align: left;">
-    <thead>
-      <tr style="background-color: #f2f2f2; border-bottom: 2px solid #ddd;">
-        <th style="padding: 10px;">Sector</th>
-        <th style="padding: 10px;">S&P 500 Neutral Weight</th>
-        <th style="padding: 10px;">My Portfolio %</th>
-        <th style="padding: 10px;">Exposure Level</th>
-        <th style="padding: 10px;">Current P/E</th>
-        <th style="padding: 10px;">Forecasted P/E</th>
-      </tr>
-    </thead>
-    <tbody>
-      <!-- Dynamically populated from Google Sheet published CSV/JSON endpoint -->
-    </tbody>
-  </table>
-</section>
-
-<script>
-  /**
-   * Fetches the published Sector Mojo CSV data from Google Sheets and renders the HTML table.
-   */
-  async function loadSectorMojoTable() {
-    const publishedCsvUrl = "YOUR_PUBLISHED_GOOGLE_SHEET_CSV_URL_HERE";
-    try {
-      const response = await fetch(publishedCsvUrl);
-      const data = await response.text();
-      const rows = data.split('\n').map(row => row.split(','));
-      
-      const tbody = document.querySelector("#sector-mojo-table tbody");
-      tbody.innerHTML = "";
-
-      // Skip header row (index 0)
-      for (let i = 1; i < rows.length; i++) {
-        if (rows[i].length < 6) continue;
-        const tr = document.createElement("tr");
-        tr.style.borderBottom = "1px solid #eee";
-        
-        // Highlight S&P 500 total row
-        if (rows[i][0].trim() === "S&P 500") {
-          tr.style.fontWeight = "bold";
-          tr.style.backgroundColor = "#fafafa";
-        }
-
-        rows[i].forEach(cellText => {
-          const td = document.createElement("td");
-          td.style.padding = "8px 10px";
-          td.textContent = cellText.replace(/^"|"$/g, '').trim();
-          tr.appendChild(td);
-        });
-        tbody.appendChild(tr);
-      }
-    } catch (err) {
-      console.error("Failed to load Sector Mojo table data:", err);
-    }
-  }
-
-  document.addEventListener("DOMContentLoaded", loadSectorMojoTable);
-</script>
