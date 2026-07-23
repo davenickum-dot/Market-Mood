@@ -261,40 +261,6 @@
       color: var(--text-main);
     }
 
-    .mojo-badge {
-      display: inline-block;
-      padding: 2px 8px;
-      border-radius: 10px;
-      font-size: 0.72rem;
-      font-weight: 700;
-      text-align: center;
-      text-transform: uppercase;
-    }
-
-    .mojo-badge.overweight {
-      background-color: var(--accent-green-bg);
-      color: var(--accent-green);
-      border: 1px solid rgba(0, 230, 118, 0.3);
-    }
-
-    .mojo-badge.underweight {
-      background-color: var(--accent-red-bg);
-      color: var(--accent-red);
-      border: 1px solid rgba(255, 77, 77, 0.3);
-    }
-
-    .mojo-badge.neutral {
-      background-color: var(--accent-blue-bg);
-      color: var(--accent-blue);
-      border: 1px solid rgba(56, 189, 248, 0.3);
-    }
-
-    .mojo-badge.none {
-      background-color: rgba(255, 255, 255, 0.05);
-      color: var(--text-muted);
-      border: 1px solid var(--border-color);
-    }
-
     /* Footer / Guide */
     footer {
       margin-top: 10px;
@@ -429,7 +395,7 @@
             <th>Sector</th>
             <th style="text-align: right;">S&amp;P 500 Neutral Weight</th>
             <th style="text-align: right;">My Portfolio %</th>
-            <th style="text-align: center;">Exposure Level</th>
+            <th style="text-align: right;">Difference (+/-)</th>
             <th style="text-align: right;">Current P/E</th>
             <th style="text-align: right;">Forecasted P/E</th>
           </tr>
@@ -457,25 +423,17 @@
 
   let chartInstance = null;
 
-  /**
-   * Fetches Mood and Sector Mojo datasets simultaneously.
-   */
   async function fetchAllData() {
     fetchMoodData();
     fetchSectorMojoData();
   }
 
-  /**
-   * Fetches and renders QQQ options skew data.
-   */
   async function fetchMoodData() {
     try {
       const response = await fetch(GVIZ_MOOD_URL);
       const text = await response.text();
-      
       const jsonString = text.substring(47, text.length - 2);
       const data = JSON.parse(jsonString);
-      
       processMoodData(data.table.rows);
     } catch (err) {
       console.error("Error fetching Mood data:", err);
@@ -529,10 +487,7 @@
 
   function renderChart(labels, dataPoints) {
     const ctx = document.getElementById('skewChart').getContext('2d');
-    
-    if (chartInstance) {
-      chartInstance.destroy();
-    }
+    if (chartInstance) chartInstance.destroy();
 
     chartInstance = new Chart(ctx, {
       type: 'line',
@@ -552,45 +507,62 @@
         maintainAspectRatio: false,
         plugins: { legend: { display: false } },
         scales: {
-          x: {
-            grid: { color: 'rgba(255,255,255,0.05)' },
-            ticks: { color: '#8b95a5', font: { size: 10 } }
-          },
-          y: {
-            grid: { color: 'rgba(255,255,255,0.05)' },
-            ticks: { color: '#8b95a5', font: { size: 10 } }
-          }
+          x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#8b95a5', font: { size: 10 } } },
+          y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#8b95a5', font: { size: 10 } } }
         }
       }
     });
   }
 
-  /**
-   * Fetches and populates the Sector Mojo table using GViz JSON.
-   */
   async function fetchSectorMojoData() {
     try {
       const response = await fetch(GVIZ_MOJO_URL);
       const text = await response.text();
-      
       const jsonString = text.substring(47, text.length - 2);
       const data = JSON.parse(jsonString);
-      
       renderSectorMojo(data.table.rows);
     } catch (err) {
       console.error("Error fetching Sector Mojo data:", err);
       document.getElementById('sector-mojo-tbody').innerHTML = `
-        <tr>
-          <td colspan="6" style="text-align:center; color: var(--accent-red); padding: 15px;">
-            Failed to load Sector Mojo feed.
-          </td>
-        </tr>
+        <tr><td colspan="6" style="text-align:center; color: var(--accent-red); padding: 15px;">Failed to load Sector Mojo feed.</td></tr>
       `;
     }
   }
 
   /**
-   * Fetches and populates the Sector Mojo table using GViz JSON with explicit P/E coloring.
+   * Helper function to convert raw decimal or formatted cell inputs into a standardized percentage string.
+   */
+  function formatCellPercent(cell) {
+    if (!cell || cell.v === null || cell.v === undefined || cell.v === '' || cell.v === '-') return '-';
+    
+    // If Google Sheet provided a formatted string like "2.91%"
+    if (cell.f && String(cell.f).includes('%')) return cell.f;
+
+    const rawStr = String(cell.v).replace(/[\$,%]/g, '').trim();
+    const num = parseFloat(rawStr);
+    if (isNaN(num)) return '-';
+
+    // If raw numeric decimal <= 1.0 (e.g. 0.0291 -> 2.91%), scale up by 100
+    if (Math.abs(num) <= 1.0 && num !== 0) {
+      return (num * 100).toFixed(2) + '%';
+    }
+    
+    return num.toFixed(2) + '%';
+  }
+
+  /**
+   * Helper function to extract a clean numerical value for comparisons.
+   */
+  function parseCellNum(cell) {
+    if (!cell || cell.v === null || cell.v === undefined) return null;
+    const num = parseFloat(String(cell.v).replace(/[\$,%]/g, ''));
+    if (isNaN(num)) return null;
+    return (Math.abs(num) <= 1.0 && num !== 0) ? num * 100 : num;
+  }
+
+  /**
+   * Renders the Sector Mojo table with Difference (+/-) column formatting:
+   * Negative Differences in Green (#00e676), Positive Differences in Red (#ff4d4d).
    */
   function renderSectorMojo(rows) {
     const tbody = document.getElementById('sector-mojo-tbody');
@@ -601,14 +573,7 @@
       return;
     }
 
-    // Helper function to safely extract numbers from Google Sheet cell objects
-    const parseCellNum = (cell) => {
-      if (!cell || cell.v === null || cell.v === undefined) return null;
-      const num = parseFloat(String(cell.v).replace(/[\$,]/g, ''));
-      return isNaN(num) ? null : num;
-    };
-
-    // First pass: locate S&P 500 row to extract benchmark market P/E values
+    // Locate S&P 500 benchmark P/E values
     let sp500CurrPE = null;
     let sp500ForePE = null;
 
@@ -616,7 +581,6 @@
       const c = rows[i].c;
       if (!c || c.length < 6) continue;
       const sectorName = String(c[0] ? (c[0].v || c[0].f || '') : '').trim();
-      
       if (sectorName.toUpperCase().includes("S&P 500")) {
         sp500CurrPE = parseCellNum(c[4]);
         sp500ForePE = parseCellNum(c[5]);
@@ -624,23 +588,24 @@
       }
     }
 
-    // Second pass: render all rows with enforced conditional relative value coloring
     for (let i = 1; i < rows.length; i++) {
       const c = rows[i].c;
       if (!c || c.length < 6) continue;
 
       const sector = String(c[0] ? (c[0].v || c[0].f || '') : '').trim();
-      const neutralWeight = c[1] ? (c[1].f || c[1].v || '-') : '-';
-      const myPortfolio = c[2] ? (c[2].f || c[2].v || '-') : '-';
-      const exposure = c[3] ? String(c[3].v || '').trim() : '-';
-      
+      const neutralWeightText = formatCellPercent(c[1]);
+      const myPortfolioText = formatCellPercent(c[2]);
+      const diffText = formatCellPercent(c[3]);
+      const diffVal = parseCellNum(c[3]);
+
       const currVal = parseCellNum(c[4]);
       const foreVal = parseCellNum(c[5]);
 
-      const currentPEText = currVal !== null ? currVal.toFixed(1) : 'N/A';
-      const forecastedPEText = foreVal !== null ? foreVal.toFixed(1) : 'N/A';
+      const currentPEText = c[4] ? (c[4].v !== null ? String(c[4].v) : 'N/A') : 'N/A';
+      const forecastedPEText = c[5] ? (c[5].v !== null ? String(c[5].v) : 'N/A') : 'N/A';
 
       const isSP500 = sector.toUpperCase().includes("S&P 500");
+      const isCash = sector.toLowerCase() === "cash";
       const tr = document.createElement("tr");
 
       if (isSP500) {
@@ -649,37 +614,35 @@
         tr.style.backgroundColor = "rgba(255, 255, 255, 0.02)";
       }
 
-      // Exposure Level Badge Styling
-      let badgeClass = "none";
-      const expLower = exposure.toLowerCase();
-      if (expLower === "overweight") badgeClass = "overweight";
-      else if (expLower === "underweight") badgeClass = "underweight";
-      else if (expLower === "neutral") badgeClass = "neutral";
+      // Difference (+/-) Color Rules: Negative = Green, Positive = Red
+      let diffColor = "var(--text-main)";
+      if (!isSP500 && !isCash && diffVal !== null) {
+        if (diffVal < 0) diffColor = "#00e676"; // Underweight / Negative difference -> Green
+        else if (diffVal > 0) diffColor = "#ff4d4d"; // Overweight / Positive difference -> Red
+      }
 
-      // Relative Valuation P/E Color Rules (Green = Below Market, Red = Above Market)
+      // Valuation Color Rules: Cheaper than market = Green, More expensive = Red
       let currColor = "var(--text-main)";
       let foreColor = "var(--text-main)";
 
-      if (!isSP500) {
+      if (!isSP500 && !isCash) {
         if (currVal !== null && sp500CurrPE !== null) {
-          if (currVal < sp500CurrPE) currColor = "#00e676"; // Green (Cheaper than market)
-          else if (currVal > sp500CurrPE) currColor = "#ff4d4d"; // Red (More expensive)
+          if (currVal < sp500CurrPE) currColor = "#00e676";
+          else if (currVal > sp500CurrPE) currColor = "#ff4d4d";
         }
         if (foreVal !== null && sp500ForePE !== null) {
-          if (foreVal < sp500ForePE) foreColor = "#00e676"; // Green (Cheaper than market)
-          else if (foreVal > sp500ForePE) foreColor = "#ff4d4d"; // Red (More expensive)
+          if (foreVal < sp500ForePE) foreColor = "#00e676";
+          else if (foreVal > sp500ForePE) foreColor = "#ff4d4d";
         }
       }
 
       tr.innerHTML = `
         <td style="font-weight: ${isSP500 ? '700' : '600'};">${sector}</td>
-        <td style="text-align: right;">${neutralWeight}</td>
-        <td style="text-align: right;">${myPortfolio}</td>
-        <td style="text-align: center;">
-          ${isSP500 ? '-' : `<span class="mojo-badge ${badgeClass}">${exposure}</span>`}
-        </td>
-        <td style="text-align: right; color: ${currColor} !important; font-weight: 600;">${currentPEText}</td>
-        <td style="text-align: right; color: ${foreColor} !important; font-weight: 600;">${forecastedPEText}</td>
+        <td style="text-align: right;">${isCash ? '-' : neutralWeightText}</td>
+        <td style="text-align: right;">${myPortfolioText}</td>
+        <td style="text-align: right; color: ${diffColor} !important; font-weight: 600;">${isSP500 || isCash ? '-' : diffText}</td>
+        <td style="text-align: right; color: ${currColor} !important; font-weight: 600;">${isCash ? '-' : currentPEText}</td>
+        <td style="text-align: right; color: ${foreColor} !important; font-weight: 600;">${isCash ? '-' : forecastedPEText}</td>
       `;
 
       tbody.appendChild(tr);
@@ -688,7 +651,6 @@
     document.getElementById('mojo-status').innerText = 'Live Feed Active';
   }
 
-  // Initial load & 60-second auto-refresh
   fetchAllData();
   setInterval(fetchAllData, 60000);
 </script>
