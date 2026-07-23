@@ -101,6 +101,50 @@
       border: 1px solid var(--border-color);
       border-radius: 12px;
       padding: 20px;
+      position: relative;
+    }
+
+    /* Info Icon & Collapsible Drawer */
+    .info-btn {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+      z-index: 10;
+    }
+
+    .info-btn:hover {
+      background: var(--accent-blue-bg);
+      color: var(--accent-blue);
+      border-color: var(--accent-blue);
+    }
+
+    .info-panel {
+      display: none;
+      background: rgba(56, 189, 248, 0.05);
+      border: 1px solid rgba(56, 189, 248, 0.2);
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin-top: 12px;
+      font-size: 0.8rem;
+      line-height: 1.4;
+      color: #d0d7e3;
+    }
+
+    .info-panel.active {
+      display: block;
     }
 
     /* Hero Card */
@@ -187,6 +231,7 @@
       letter-spacing: 0.8px;
       margin-bottom: 14px;
       font-weight: 600;
+      padding-right: 30px;
     }
 
     .chart-container {
@@ -292,12 +337,18 @@
   <!-- Top Hero & Key Metrics -->
   <div class="top-grid">
     <div class="card hero-card">
-      <div class="badge">
-        <span class="badge-dot"></span>
-        <span id="regime-badge">FEAR PREMIUM</span>
+      <button class="info-btn" onclick="toggleInfo('info-hero')" title="Click for info">i</button>
+      <div>
+        <div class="badge">
+          <span class="badge-dot"></span>
+          <span id="regime-badge">FEAR PREMIUM</span>
+        </div>
+        <div class="hero-value" id="latest-spread">+14.2</div>
+        <div class="hero-sub">IV Spread (Put − Call, 25Δ) · <span id="latest-date">Jul 20</span></div>
       </div>
-      <div class="hero-value" id="latest-spread">+14.2</div>
-      <div class="hero-sub">IV Spread (Put − Call, 25Δ) · <span id="latest-date">Jul 20</span></div>
+      <div id="info-hero" class="info-panel">
+        <strong>Market Regime Signal:</strong> Measures institutional hedging velocity via QQQ 25-Delta Put vs. Call Implied Volatility (IV). A positive spread (>5) indicates downside protection is in high demand relative to calls.
+      </div>
     </div>
 
     <div class="metrics-grid">
@@ -323,13 +374,18 @@
   <!-- Chart and History Table -->
   <div class="main-grid">
     <div class="card">
+      <button class="info-btn" onclick="toggleInfo('info-chart')" title="Click for info">i</button>
       <div class="section-title">IV SPREAD — LAST 10 DAYS</div>
       <div class="chart-container">
         <canvas id="skewChart"></canvas>
       </div>
+      <div id="info-chart" class="info-panel">
+        <strong>IV Spread Trend:</strong> Tracks the 10-day trajectory of the Put-Call IV spread. Upward momentum signals mounting hedging pressure, while drops toward zero suggest fading fear or growing speculative call buying.
+      </div>
     </div>
 
     <div class="card">
+      <button class="info-btn" onclick="toggleInfo('info-history')" title="Click for info">i</button>
       <div class="section-title">10-DAY HISTORY</div>
       <table>
         <thead>
@@ -347,11 +403,15 @@
           <!-- Rows dynamically populated -->
         </tbody>
       </table>
+      <div id="info-history" class="info-panel">
+        <strong>Historical Log:</strong> Rolling 10-day log capturing daily closing options parameters for QQQ, including individual Put/Call IVs, ratio calculations, assigned market regimes, and QQQ close prices.
+      </div>
     </div>
   </div>
 
   <!-- Interpretation Guide -->
   <div class="card">
+    <button class="info-btn" onclick="toggleInfo('info-guide')" title="Click for info">i</button>
     <div class="section-title">INTERPRETATION GUIDE</div>
     <table>
       <thead>
@@ -379,13 +439,17 @@
         </tr>
       </tbody>
     </table>
+    <div id="info-guide" class="info-panel">
+      <strong>Regime Thresholds:</strong> Quick reference explaining options skew regimes. Standard market environments exhibit a <em>Fear Premium</em> (>5.0). Readings below 0 point to rare upside FOMO demand over downside hedging.
+    </div>
   </div>
 
-  <!-- Sector Mojo Section (Directly below Interpretation Guide) -->
+  <!-- Sector Mojo Section -->
   <div class="card">
+    <button class="info-btn" onclick="toggleInfo('info-mojo')" title="Click for info">i</button>
     <div class="section-title" style="display: flex; justify-content: space-between; align-items: center;">
       <span>SECTOR MOJO</span>
-      <span id="mojo-status" style="font-size: 0.7rem; color: var(--text-muted); font-weight: normal;">Loading feed...</span>
+      <span id="mojo-status" style="font-size: 0.7rem; color: var(--text-muted); font-weight: normal; margin-right: 25px;">Loading feed...</span>
     </div>
 
     <div class="mojo-table-wrapper">
@@ -407,6 +471,12 @@
         </tbody>
       </table>
     </div>
+
+    <div id="info-mojo" class="info-panel">
+      <strong>Sector Allocation & Value Matrix:</strong> Compares your portfolio's sector weights against S&P 500 benchmarks alongside Yardeni valuation metrics.<br>
+      • <strong>Difference (+/-):</strong> <span style="color:#00e676; font-weight:bold;">Green</span> = Underweight vs. market, <span style="color:#ff4d4d; font-weight:bold;">Red</span> = Overweight.<br>
+      • <strong>P/E Ratios:</strong> <span style="color:#00e676; font-weight:bold;">Green</span> = Sector trades at a discount to S&P 500 market P/E, <span style="color:#ff4d4d; font-weight:bold;">Red</span> = Sector trades at a premium.
+    </div>
   </div>
 
   <footer>
@@ -422,6 +492,16 @@
   const GVIZ_MOJO_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json&sheet=Sector%20Mojo`;
 
   let chartInstance = null;
+
+  /**
+   * Toggles the visibility of section info panels.
+   */
+  function toggleInfo(id) {
+    const panel = document.getElementById(id);
+    if (panel) {
+      panel.classList.toggle('active');
+    }
+  }
 
   async function fetchAllData() {
     fetchMoodData();
@@ -529,20 +609,14 @@
     }
   }
 
-  /**
-   * Helper function to convert raw decimal or formatted cell inputs into a standardized percentage string.
-   */
   function formatCellPercent(cell) {
     if (!cell || cell.v === null || cell.v === undefined || cell.v === '' || cell.v === '-') return '-';
-    
-    // If Google Sheet provided a formatted string like "2.91%"
     if (cell.f && String(cell.f).includes('%')) return cell.f;
 
     const rawStr = String(cell.v).replace(/[\$,%]/g, '').trim();
     const num = parseFloat(rawStr);
     if (isNaN(num)) return '-';
 
-    // If raw numeric decimal <= 1.0 (e.g. 0.0291 -> 2.91%), scale up by 100
     if (Math.abs(num) <= 1.0 && num !== 0) {
       return (num * 100).toFixed(2) + '%';
     }
@@ -550,9 +624,6 @@
     return num.toFixed(2) + '%';
   }
 
-  /**
-   * Helper function to extract a clean numerical value for comparisons.
-   */
   function parseCellNum(cell) {
     if (!cell || cell.v === null || cell.v === undefined) return null;
     const num = parseFloat(String(cell.v).replace(/[\$,%]/g, ''));
@@ -560,10 +631,6 @@
     return (Math.abs(num) <= 1.0 && num !== 0) ? num * 100 : num;
   }
 
-  /**
-   * Renders the Sector Mojo table with Difference (+/-) column formatting:
-   * Negative Differences in Green (#00e676), Positive Differences in Red (#ff4d4d).
-   */
   function renderSectorMojo(rows) {
     const tbody = document.getElementById('sector-mojo-tbody');
     tbody.innerHTML = '';
@@ -573,7 +640,6 @@
       return;
     }
 
-    // Locate S&P 500 benchmark P/E values
     let sp500CurrPE = null;
     let sp500ForePE = null;
 
@@ -614,14 +680,12 @@
         tr.style.backgroundColor = "rgba(255, 255, 255, 0.02)";
       }
 
-      // Difference (+/-) Color Rules: Negative = Green, Positive = Red
       let diffColor = "var(--text-main)";
       if (!isSP500 && !isCash && diffVal !== null) {
-        if (diffVal < 0) diffColor = "#00e676"; // Underweight / Negative difference -> Green
-        else if (diffVal > 0) diffColor = "#ff4d4d"; // Overweight / Positive difference -> Red
+        if (diffVal < 0) diffColor = "#00e676";
+        else if (diffVal > 0) diffColor = "#ff4d4d";
       }
 
-      // Valuation Color Rules: Cheaper than market = Green, More expensive = Red
       let currColor = "var(--text-main)";
       let foreColor = "var(--text-main)";
 
