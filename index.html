@@ -83,6 +83,47 @@
       margin-right: 4px;
     }
 
+    /* Tab Navigation */
+    .tab-nav {
+      display: flex;
+      gap: 6px;
+      border-bottom: 1px solid var(--border-color);
+      margin-bottom: 4px;
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: 0.9rem;
+      font-weight: 600;
+      padding: 10px 16px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      margin-bottom: -1px;
+    }
+
+    .tab-btn:hover {
+      color: var(--text-main);
+    }
+
+    .tab-btn.active {
+      color: var(--accent-blue);
+      border-bottom-color: var(--accent-blue);
+    }
+
+    .tab-panel {
+      display: none;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .tab-panel.active {
+      display: flex;
+    }
+
     /* Top Grid */
     .top-grid {
       display: grid;
@@ -91,7 +132,7 @@
     }
 
     @media (max-width: 768px) {
-      .top-grid, .main-grid {
+      .top-grid, .main-grid, .bayes-grid {
         grid-template-columns: 1fr !important;
       }
     }
@@ -306,6 +347,158 @@
       color: var(--text-main);
     }
 
+    /* Bayesian Analysis */
+    .bayes-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .bayes-field {
+      margin-bottom: 16px;
+    }
+
+    .bayes-field label {
+      display: block;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+
+    .bayes-field .hint {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      font-weight: 400;
+      margin-top: 4px;
+      line-height: 1.4;
+    }
+
+    .bayes-input,
+    .bayes-textarea {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      color: var(--text-main);
+      font-family: inherit;
+      font-size: 0.95rem;
+      padding: 10px 12px;
+      transition: border-color 0.2s ease;
+    }
+
+    .bayes-input:focus,
+    .bayes-textarea:focus {
+      outline: none;
+      border-color: var(--accent-blue);
+    }
+
+    .bayes-textarea {
+      resize: vertical;
+      min-height: 70px;
+      line-height: 1.5;
+    }
+
+    .bayes-input-suffix {
+      position: relative;
+    }
+
+    .bayes-input-suffix::after {
+      content: "%";
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      pointer-events: none;
+    }
+
+    .bayes-btn {
+      background: var(--accent-blue);
+      color: #04121b;
+      border: none;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 0.9rem;
+      font-weight: 700;
+      padding: 12px 16px;
+      cursor: pointer;
+      width: 100%;
+      transition: opacity 0.2s ease;
+    }
+
+    .bayes-btn:hover {
+      opacity: 0.88;
+    }
+
+    .bayes-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    /* Posterior result readout */
+    .posterior-readout {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      gap: 6px;
+    }
+
+    .posterior-value {
+      font-size: 4rem;
+      font-weight: 800;
+      color: var(--accent-green);
+      line-height: 1;
+    }
+
+    .posterior-label {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    .posterior-delta {
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 20px;
+      margin-top: 4px;
+    }
+
+    .delta-up { color: var(--accent-green); background: var(--accent-green-bg); }
+    .delta-down { color: var(--accent-red); background: var(--accent-red-bg); }
+    .delta-flat { color: var(--text-muted); background: rgba(255,255,255,0.04); }
+
+    .remainder-line {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border-color);
+      width: 100%;
+      text-align: center;
+    }
+
+    .bayes-empty {
+      text-align: center;
+      color: var(--text-muted);
+      padding: 24px 0;
+      font-size: 0.85rem;
+    }
+
+    .prob-cell {
+      font-weight: 700;
+      color: var(--accent-green);
+    }
+
+    .note-cell {
+      color: var(--text-muted);
+      max-width: 280px;
+      white-space: normal;
+    }
+
     /* Footer / Guide */
     footer {
       margin-top: 10px;
@@ -334,162 +527,283 @@
     </div>
   </header>
 
-  <!-- Top Hero & Key Metrics -->
-  <div class="top-grid">
-    <div class="card hero-card">
-      <button class="info-btn" onclick="toggleInfo('info-hero')" title="Click for info">i</button>
-      <div>
-        <div class="badge">
-          <span class="badge-dot"></span>
-          <span id="regime-badge">FEAR PREMIUM</span>
+  <!-- Tab Navigation -->
+  <nav class="tab-nav">
+    <button class="tab-btn active" data-tab="tab-dashboard" onclick="switchTab('tab-dashboard')">Dashboard</button>
+    <button class="tab-btn" data-tab="tab-bayes" onclick="switchTab('tab-bayes')">Bayesian Analysis</button>
+  </nav>
+
+  <!-- ============ DASHBOARD TAB ============ -->
+  <div id="tab-dashboard" class="tab-panel active">
+    <!-- Top Hero & Key Metrics -->
+    <div class="top-grid">
+      <div class="card hero-card">
+        <button class="info-btn" onclick="toggleInfo('info-hero')" title="Click for info">i</button>
+        <div>
+          <div class="badge">
+            <span class="badge-dot"></span>
+            <span id="regime-badge">FEAR PREMIUM</span>
+          </div>
+          <div class="hero-value" id="latest-spread">+14.2</div>
+          <div class="hero-sub">IV Spread (Put − Call, 25Δ) · <span id="latest-date">Jul 20</span></div>
         </div>
-        <div class="hero-value" id="latest-spread">+14.2</div>
-        <div class="hero-sub">IV Spread (Put − Call, 25Δ) · <span id="latest-date">Jul 20</span></div>
+        <div id="info-hero" class="info-panel">
+          <strong>Market Regime Signal:</strong> Measures institutional hedging velocity via QQQ 25-Delta Put vs. Call Implied Volatility (IV). A positive spread (>5) indicates downside protection is in high demand relative to calls.
+        </div>
       </div>
-      <div id="info-hero" class="info-panel">
-        <strong>Market Regime Signal:</strong> Measures institutional hedging velocity via QQQ 25-Delta Put vs. Call Implied Volatility (IV). A positive spread (>5) indicates downside protection is in high demand relative to calls.
+
+      <div class="metrics-grid">
+        <div class="metric-tile">
+          <div class="metric-label">PUT IV (25D)</div>
+          <div class="metric-value" id="put-iv">34.0%</div>
+        </div>
+        <div class="metric-tile">
+          <div class="metric-label">CALL IV (25D)</div>
+          <div class="metric-value" id="call-iv">19.8%</div>
+        </div>
+        <div class="metric-tile">
+          <div class="metric-label">SKEW RATIO (CALL/PUT)</div>
+          <div class="metric-value" id="skew-ratio">0.58</div>
+        </div>
+        <div class="metric-tile">
+          <div class="metric-label">QQQ PRICE</div>
+          <div class="metric-value" id="qqq-price">$697.70</div>
+        </div>
       </div>
     </div>
 
-    <div class="metrics-grid">
-      <div class="metric-tile">
-        <div class="metric-label">PUT IV (25D)</div>
-        <div class="metric-value" id="put-iv">34.0%</div>
+    <!-- Chart and History Table -->
+    <div class="main-grid">
+      <div class="card">
+        <button class="info-btn" onclick="toggleInfo('info-chart')" title="Click for info">i</button>
+        <div class="section-title">IV SPREAD — LAST 10 DAYS</div>
+        <div class="chart-container">
+          <canvas id="skewChart"></canvas>
+        </div>
+        <div id="info-chart" class="info-panel">
+          <strong>IV Spread Trend:</strong> Tracks the 10-day trajectory of the Put-Call IV spread. Upward momentum signals mounting hedging pressure, while drops toward zero suggest fading fear or growing speculative call buying.
+        </div>
       </div>
-      <div class="metric-tile">
-        <div class="metric-label">CALL IV (25D)</div>
-        <div class="metric-value" id="call-iv">19.8%</div>
-      </div>
-      <div class="metric-tile">
-        <div class="metric-label">SKEW RATIO (CALL/PUT)</div>
-        <div class="metric-value" id="skew-ratio">0.58</div>
-      </div>
-      <div class="metric-tile">
-        <div class="metric-label">QQQ PRICE</div>
-        <div class="metric-value" id="qqq-price">$697.70</div>
+
+      <div class="card">
+        <button class="info-btn" onclick="toggleInfo('info-history')" title="Click for info">i</button>
+        <div class="section-title">10-DAY HISTORY</div>
+        <table>
+          <thead>
+            <tr>
+              <th>DATE</th>
+              <th>PUT IV</th>
+              <th>CALL IV</th>
+              <th>SPREAD</th>
+              <th>RATIO</th>
+              <th>REGIME</th>
+              <th>QQQ</th>
+            </tr>
+          </thead>
+          <tbody id="history-tbody">
+            <!-- Rows dynamically populated -->
+          </tbody>
+        </table>
+        <div id="info-history" class="info-panel">
+          <strong>Historical Log:</strong> Rolling 10-day log capturing daily closing options parameters for QQQ, including individual Put/Call IVs, ratio calculations, assigned market regimes, and QQQ close prices.
+        </div>
       </div>
     </div>
-  </div>
 
-  <!-- Chart and History Table -->
-  <div class="main-grid">
+    <!-- Interpretation Guide -->
     <div class="card">
-      <button class="info-btn" onclick="toggleInfo('info-chart')" title="Click for info">i</button>
-      <div class="section-title">IV SPREAD — LAST 10 DAYS</div>
-      <div class="chart-container">
-        <canvas id="skewChart"></canvas>
-      </div>
-      <div id="info-chart" class="info-panel">
-        <strong>IV Spread Trend:</strong> Tracks the 10-day trajectory of the Put-Call IV spread. Upward momentum signals mounting hedging pressure, while drops toward zero suggest fading fear or growing speculative call buying.
-      </div>
-    </div>
-
-    <div class="card">
-      <button class="info-btn" onclick="toggleInfo('info-history')" title="Click for info">i</button>
-      <div class="section-title">10-DAY HISTORY</div>
+      <button class="info-btn" onclick="toggleInfo('info-guide')" title="Click for info">i</button>
+      <div class="section-title">INTERPRETATION GUIDE</div>
       <table>
         <thead>
           <tr>
-            <th>DATE</th>
-            <th>PUT IV</th>
-            <th>CALL IV</th>
-            <th>SPREAD</th>
-            <th>RATIO</th>
             <th>REGIME</th>
-            <th>QQQ</th>
+            <th>SPREAD</th>
+            <th>WHAT IT MEANS</th>
           </tr>
         </thead>
-        <tbody id="history-tbody">
-          <!-- Rows dynamically populated -->
+        <tbody>
+          <tr>
+            <td><span class="tag-regime">Fear Premium</span></td>
+            <td>&gt; +5</td>
+            <td>Normal hedging demand; downside protection expensive.</td>
+          </tr>
+          <tr>
+            <td style="color:#e6a23c;">Compressed Skew</td>
+            <td>0 to +5</td>
+            <td>Fear premium fading; upside speculation growing.</td>
+          </tr>
+          <tr>
+            <td style="color:#67c23a;">Call Skew / Upside Demand</td>
+            <td>&lt; 0</td>
+            <td>Unusual regime; speculative call buying dominates.</td>
+          </tr>
         </tbody>
       </table>
-      <div id="info-history" class="info-panel">
-        <strong>Historical Log:</strong> Rolling 10-day log capturing daily closing options parameters for QQQ, including individual Put/Call IVs, ratio calculations, assigned market regimes, and QQQ close prices.
+      <div id="info-guide" class="info-panel">
+        <strong>Regime Thresholds:</strong> Quick reference explaining options skew regimes. Standard market environments exhibit a <em>Fear Premium</em> (>5.0). Readings below 0 point to rare upside FOMO demand over downside hedging.
+      </div>
+    </div>
+
+    <!-- Sector Mojo Section -->
+    <div class="card">
+      <button class="info-btn" onclick="toggleInfo('info-mojo')" title="Click for info">i</button>
+      <div class="section-title" style="display: flex; justify-content: space-between; align-items: center;">
+        <span>SECTOR MOJO</span>
+        <span id="mojo-status" style="font-size: 0.7rem; color: var(--text-muted); font-weight: normal; margin-right: 25px;">Loading feed...</span>
+      </div>
+
+      <div class="mojo-table-wrapper">
+        <table class="mojo-table">
+          <thead>
+            <tr>
+              <th>Sector</th>
+              <th style="text-align: right;">S&amp;P 500 Neutral Weight</th>
+              <th style="text-align: right;">My Portfolio %</th>
+              <th style="text-align: right;">Difference (+/-)</th>
+              <th style="text-align: right;">Current P/E</th>
+              <th style="text-align: right;">Forecasted P/E</th>
+            </tr>
+          </thead>
+          <tbody id="sector-mojo-tbody">
+            <tr>
+              <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 20px;">Loading Sector Mojo data...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div id="info-mojo" class="info-panel">
+        <strong>Sector Allocation & Value Matrix:</strong> Compares your portfolio's sector weights against S&P 500 benchmarks alongside Yardeni valuation metrics.<br>
+        • <strong>Difference (+/-):</strong> <span style="color:#00e676; font-weight:bold;">Green</span> = Underweight vs. market, <span style="color:#ff4d4d; font-weight:bold;">Red</span> = Overweight.<br>
+        • <strong>P/E Ratios:</strong> <span style="color:#00e676; font-weight:bold;">Green</span> = Sector trades at a discount to S&P 500 market P/E, <span style="color:#ff4d4d; font-weight:bold;">Red</span> = Sector trades at a premium.
       </div>
     </div>
   </div>
 
-  <!-- Interpretation Guide -->
-  <div class="card">
-    <button class="info-btn" onclick="toggleInfo('info-guide')" title="Click for info">i</button>
-    <div class="section-title">INTERPRETATION GUIDE</div>
-    <table>
-      <thead>
-        <tr>
-          <th>REGIME</th>
-          <th>SPREAD</th>
-          <th>WHAT IT MEANS</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td><span class="tag-regime">Fear Premium</span></td>
-          <td>&gt; +5</td>
-          <td>Normal hedging demand; downside protection expensive.</td>
-        </tr>
-        <tr>
-          <td style="color:#e6a23c;">Compressed Skew</td>
-          <td>0 to +5</td>
-          <td>Fear premium fading; upside speculation growing.</td>
-        </tr>
-        <tr>
-          <td style="color:#67c23a;">Call Skew / Upside Demand</td>
-          <td>&lt; 0</td>
-          <td>Unusual regime; speculative call buying dominates.</td>
-        </tr>
-      </tbody>
-    </table>
-    <div id="info-guide" class="info-panel">
-      <strong>Regime Thresholds:</strong> Quick reference explaining options skew regimes. Standard market environments exhibit a <em>Fear Premium</em> (>5.0). Readings below 0 point to rare upside FOMO demand over downside hedging.
-    </div>
-  </div>
+  <!-- ============ BAYESIAN ANALYSIS TAB ============ -->
+  <div id="tab-bayes" class="tab-panel">
+    <div class="bayes-grid">
+      <!-- Inputs -->
+      <div class="card">
+        <button class="info-btn" onclick="toggleInfo('info-bayes-calc')" title="Click for info">i</button>
+        <div class="section-title">UPDATE SCENARIO PROBABILITY</div>
 
-  <!-- Sector Mojo Section -->
-  <div class="card">
-    <button class="info-btn" onclick="toggleInfo('info-mojo')" title="Click for info">i</button>
-    <div class="section-title" style="display: flex; justify-content: space-between; align-items: center;">
-      <span>SECTOR MOJO</span>
-      <span id="mojo-status" style="font-size: 0.7rem; color: var(--text-muted); font-weight: normal; margin-right: 25px;">Loading feed...</span>
+        <div class="bayes-field">
+          <label for="scenario-name">Scenario</label>
+          <input type="text" id="scenario-name" class="bayes-input" value="Roaring 2020s" placeholder="e.g. Roaring 2020s">
+        </div>
+
+        <div class="bayes-field">
+          <label for="prior">Prior probability P(H)</label>
+          <div class="bayes-input-suffix">
+            <input type="number" id="prior" class="bayes-input" min="0" max="100" step="0.1" value="80" oninput="recomputePosterior()">
+          </div>
+          <div class="hint">Your belief before the new evidence (e.g. 80%).</div>
+        </div>
+
+        <div class="bayes-field">
+          <label for="like-h">Likelihood if scenario TRUE · P(E | H)</label>
+          <div class="bayes-input-suffix">
+            <input type="number" id="like-h" class="bayes-input" min="0" max="100" step="0.1" value="70" oninput="recomputePosterior()">
+          </div>
+          <div class="hint">How likely you'd see this evidence if the scenario is playing out.</div>
+        </div>
+
+        <div class="bayes-field">
+          <label for="like-not-h">Likelihood if scenario FALSE · P(E | ¬H)</label>
+          <div class="bayes-input-suffix">
+            <input type="number" id="like-not-h" class="bayes-input" min="0" max="100" step="0.1" value="30" oninput="recomputePosterior()">
+          </div>
+          <div class="hint">How likely you'd see this evidence if the scenario is wrong.</div>
+        </div>
+
+        <div class="bayes-field">
+          <label for="evidence">New information / evidence</label>
+          <textarea id="evidence" class="bayes-textarea" placeholder="e.g. We continue to assign a subjective probability of 80% to our Roaring 2020s scenario..."></textarea>
+        </div>
+
+        <div class="bayes-field">
+          <label for="reasoning">Reasoning for updating my probabilities</label>
+          <textarea id="reasoning" class="bayes-textarea" placeholder="e.g. Productivity gains from AI plus resilient consumer spending keep the growth thesis intact, but sticky inflation and geopolitical risk cap my conviction..."></textarea>
+          <div class="hint">Your macro rationale for the shift — why this evidence moves (or doesn't move) your conviction.</div>
+        </div>
+
+        <button id="log-btn" class="bayes-btn" onclick="logUpdate()">Log Update</button>
+
+        <div id="info-bayes-calc" class="info-panel">
+          <strong>Bayes' Theorem:</strong> The posterior is computed as
+          P(H|E) = [P(E|H)·P(H)] / [P(E|H)·P(H) + P(E|¬H)·(1−P(H))].
+          Set P(E|H) &gt; P(E|¬H) when the new evidence supports the scenario, and the reverse when it argues against it. Equal values leave your probability unchanged.
+        </div>
+      </div>
+
+      <!-- Result -->
+      <div class="card posterior-readout">
+        <button class="info-btn" onclick="toggleInfo('info-bayes-result')" title="Click for info">i</button>
+        <div class="posterior-label">Updated probability P(H | E)</div>
+        <div class="posterior-value" id="posterior-value">80.0%</div>
+        <div class="posterior-delta delta-flat" id="posterior-delta">No change</div>
+        <div class="remainder-line">
+          Remainder (other scenarios): <strong id="remainder-value" style="color: var(--text-main);">20.0%</strong>
+        </div>
+        <div id="info-bayes-result" class="info-panel">
+          <strong>Posterior:</strong> Your revised probability for the scenario after incorporating the new evidence. The delta shows the shift from your prior, and the remainder is what's left over for all other outcomes.
+        </div>
+      </div>
     </div>
 
-    <div class="mojo-table-wrapper">
-      <table class="mojo-table">
-        <thead>
-          <tr>
-            <th>Sector</th>
-            <th style="text-align: right;">S&amp;P 500 Neutral Weight</th>
-            <th style="text-align: right;">My Portfolio %</th>
-            <th style="text-align: right;">Difference (+/-)</th>
-            <th style="text-align: right;">Current P/E</th>
-            <th style="text-align: right;">Forecasted P/E</th>
-          </tr>
-        </thead>
-        <tbody id="sector-mojo-tbody">
-          <tr>
-            <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 20px;">Loading Sector Mojo data...</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <div id="info-mojo" class="info-panel">
-      <strong>Sector Allocation & Value Matrix:</strong> Compares your portfolio's sector weights against S&P 500 benchmarks alongside Yardeni valuation metrics.<br>
-      • <strong>Difference (+/-):</strong> <span style="color:#00e676; font-weight:bold;">Green</span> = Underweight vs. market, <span style="color:#ff4d4d; font-weight:bold;">Red</span> = Overweight.<br>
-      • <strong>P/E Ratios:</strong> <span style="color:#00e676; font-weight:bold;">Green</span> = Sector trades at a discount to S&P 500 market P/E, <span style="color:#ff4d4d; font-weight:bold;">Red</span> = Sector trades at a premium.
+    <!-- History Table -->
+    <div class="card">
+      <button class="info-btn" onclick="toggleInfo('info-bayes-history')" title="Click for info">i</button>
+      <div class="section-title" style="display:flex; justify-content:space-between; align-items:center;">
+        <span>LAST 10 UPDATES</span>
+        <button onclick="clearBayesHistory()" style="font-size:0.7rem; background:transparent; border:1px solid var(--border-color); color:var(--text-muted); border-radius:6px; padding:4px 10px; cursor:pointer; margin-right:25px;">Clear</button>
+      </div>
+      <div style="overflow-x:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>WHEN</th>
+              <th>SCENARIO</th>
+              <th>EVIDENCE</th>
+              <th>REASONING</th>
+              <th style="text-align:right;">PRIOR</th>
+              <th style="text-align:right;">P(E|H)</th>
+              <th style="text-align:right;">P(E|¬H)</th>
+              <th style="text-align:right;">POSTERIOR</th>
+            </tr>
+          </thead>
+          <tbody id="bayes-history-tbody">
+            <!-- populated from localStorage -->
+          </tbody>
+        </table>
+      </div>
+      <div id="info-bayes-history" class="info-panel">
+        <strong>Update Log:</strong> The ten most recent probability updates. When a Google Sheet web app is configured they sync across all your devices (Mac + iPad); otherwise they are stored locally in this browser. Each row records your prior, the likelihoods you entered, the resulting posterior, the new evidence, and your macro reasoning for the shift.
+      </div>
     </div>
   </div>
 
   <footer>
-    Data sourced live from Google Sheet via gviz JSON API. Refreshes automatically every 60 seconds.
+    Data sourced live from Google Sheet via gviz JSON API. Refreshes automatically every 60 seconds. Bayesian updates sync to your Google Sheet when configured, so they stay in sync across your Mac and iPad.
   </footer>
 </div>
 
 <script>
   const SPREADSHEET_ID = '1n3wCfT_IczfPVaOkkT7ukGJJbcoMbOu0EulV82KOYrE';
-  
+
   // GViz endpoints for Mood tab and Sector Mojo tab
   const GVIZ_MOOD_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json&sheet=Mood`;
   const GVIZ_MOJO_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json&sheet=Sector%20Mojo`;
+
+  // ==========================================================================
+  // Google Apps Script Web App URL for syncing the Bayesian update log across
+  // devices (Mac + iPad). Paste the "/exec" URL you get after deploying the
+  // Apps Script (see instructions in chat) between the quotes below.
+  // Leave it empty ('') to fall back to this-browser-only localStorage.
+  // ==========================================================================
+  const BAYES_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbwSndzdWR6CHPsDU6ny9sYeGldhqCSrYkwRztAF2IBWc843HcT2gVOpsohmzlNpD8gjbA/exec';
 
   let chartInstance = null;
 
@@ -503,6 +817,236 @@
     }
   }
 
+  /**
+   * Switches between the Dashboard and Bayesian Analysis tabs.
+   */
+  function switchTab(tabId) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === tabId));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tabId));
+  }
+
+  /* =====================================================
+     BAYESIAN ANALYSIS
+     ===================================================== */
+  const BAYES_STORAGE_KEY = 'marketMoodBayesHistory';
+
+  function clamp01(x) { return Math.min(1, Math.max(0, x)); }
+
+  /**
+   * Computes the posterior via Bayes' theorem.
+   * All inputs are percentages (0-100). Returns a percentage (0-100).
+   */
+  function computePosterior(priorPct, likeHPct, likeNotHPct) {
+    const prior = clamp01(priorPct / 100);
+    const lh = clamp01(likeHPct / 100);
+    const lnh = clamp01(likeNotHPct / 100);
+    const numerator = lh * prior;
+    const denominator = numerator + lnh * (1 - prior);
+    if (denominator === 0) return 0;
+    return (numerator / denominator) * 100;
+  }
+
+  function recomputePosterior() {
+    const prior = parseFloat(document.getElementById('prior').value);
+    const likeH = parseFloat(document.getElementById('like-h').value);
+    const likeNotH = parseFloat(document.getElementById('like-not-h').value);
+
+    const valid = [prior, likeH, likeNotH].every(v => !isNaN(v));
+    const logBtn = document.getElementById('log-btn');
+
+    if (!valid) {
+      document.getElementById('posterior-value').innerText = '--';
+      document.getElementById('remainder-value').innerText = '--';
+      const delta = document.getElementById('posterior-delta');
+      delta.className = 'posterior-delta delta-flat';
+      delta.innerText = 'Enter values';
+      logBtn.disabled = true;
+      return null;
+    }
+
+    logBtn.disabled = false;
+    const posterior = computePosterior(prior, likeH, likeNotH);
+    const change = posterior - prior;
+
+    document.getElementById('posterior-value').innerText = posterior.toFixed(1) + '%';
+    document.getElementById('remainder-value').innerText = (100 - posterior).toFixed(1) + '%';
+
+    const deltaEl = document.getElementById('posterior-delta');
+    if (Math.abs(change) < 0.05) {
+      deltaEl.className = 'posterior-delta delta-flat';
+      deltaEl.innerText = 'No change';
+    } else if (change > 0) {
+      deltaEl.className = 'posterior-delta delta-up';
+      deltaEl.innerText = '▲ +' + change.toFixed(1) + ' pts from prior';
+    } else {
+      deltaEl.className = 'posterior-delta delta-down';
+      deltaEl.innerText = '▼ ' + change.toFixed(1) + ' pts from prior';
+    }
+
+    return posterior;
+  }
+
+  // In-memory copy of the log. Seeded from localStorage, then replaced by the
+  // Google Sheet copy once it loads so Mac + iPad stay in sync.
+  let bayesCache = [];
+  const syncEnabled = () => typeof BAYES_WEBAPP_URL === 'string' && BAYES_WEBAPP_URL.trim() !== '';
+
+  function readLocalHistory() {
+    try {
+      const raw = localStorage.getItem(BAYES_STORAGE_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function writeLocalHistory(list) {
+    try {
+      localStorage.setItem(BAYES_STORAGE_KEY, JSON.stringify(list));
+    } catch (e) { /* storage full or unavailable — ignore */ }
+  }
+
+  // Pulls the shared log from the Google Sheet (via the Apps Script web app).
+  // Falls back to whatever is cached locally if the request fails / is offline.
+  async function pullBayesHistory() {
+    if (!syncEnabled()) return readLocalHistory();
+    try {
+      const res = await fetch(BAYES_WEBAPP_URL, { method: 'GET' });
+      const data = await res.json();
+      const list = Array.isArray(data) ? data : (data.entries || []);
+      const clean = list
+        .map(normalizeEntry)
+        .sort((a, b) => b.ts - a.ts)
+        .slice(0, 10);
+      writeLocalHistory(clean); // keep a local mirror for offline use
+      return clean;
+    } catch (e) {
+      return readLocalHistory();
+    }
+  }
+
+  // Coerce a raw row (from the sheet or localStorage) into a consistent shape.
+  function normalizeEntry(e) {
+    return {
+      ts: Number(e.ts) || Date.parse(e.ts) || Date.now(),
+      scenario: String(e.scenario || 'Scenario'),
+      evidence: String(e.evidence || ''),
+      reasoning: String(e.reasoning || ''),
+      prior: Number(e.prior),
+      likeH: Number(e.likeH),
+      likeNotH: Number(e.likeNotH),
+      posterior: Number(e.posterior)
+    };
+  }
+
+  // Send a write (add / clear) to the Apps Script web app. Uses a text/plain
+  // body so the browser treats it as a "simple" request and skips CORS preflight.
+  async function pushBayes(payload) {
+    if (!syncEnabled()) return false;
+    try {
+      await fetch(BAYES_WEBAPP_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(payload)
+      });
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  async function logUpdate() {
+    const posterior = recomputePosterior();
+    if (posterior === null) return;
+
+    const entry = normalizeEntry({
+      ts: Date.now(),
+      scenario: (document.getElementById('scenario-name').value || 'Scenario').trim(),
+      evidence: document.getElementById('evidence').value.trim(),
+      reasoning: document.getElementById('reasoning').value.trim(),
+      prior: parseFloat(document.getElementById('prior').value),
+      likeH: parseFloat(document.getElementById('like-h').value),
+      likeNotH: parseFloat(document.getElementById('like-not-h').value),
+      posterior: posterior
+    });
+
+    // Optimistic local update so the table reacts instantly on both devices.
+    bayesCache = [entry, ...bayesCache].slice(0, 10);
+    writeLocalHistory(bayesCache);
+    renderBayesHistoryFromCache();
+
+    // Roll the posterior into the prior so the next update chains from it.
+    document.getElementById('prior').value = posterior.toFixed(1);
+    document.getElementById('evidence').value = '';
+    document.getElementById('reasoning').value = '';
+    recomputePosterior();
+
+    // Persist to the shared sheet, then re-pull to reconcile with other devices.
+    if (syncEnabled()) {
+      const ok = await pushBayes({ action: 'add', entry });
+      if (ok) {
+        bayesCache = await pullBayesHistory();
+        renderBayesHistoryFromCache();
+      }
+    }
+  }
+
+  async function clearBayesHistory() {
+    if (!confirm('Clear the update log on all devices?')) return;
+    bayesCache = [];
+    writeLocalHistory(bayesCache);
+    renderBayesHistoryFromCache();
+    if (syncEnabled()) await pushBayes({ action: 'clear' });
+  }
+
+  function escapeHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  // Async entry point: pull the shared log (or local fallback), then render.
+  async function renderBayesHistory() {
+    bayesCache = await pullBayesHistory();
+    renderBayesHistoryFromCache();
+  }
+
+  // Synchronous render using whatever is currently in bayesCache.
+  function renderBayesHistoryFromCache() {
+    const tbody = document.getElementById('bayes-history-tbody');
+    const list = bayesCache;
+
+    if (list.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="8" class="bayes-empty">No updates logged yet. Enter your prior and the new evidence above, then click "Log Update".</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = list.map(e => {
+      const when = new Date(e.ts).toLocaleString('en-US', {
+        month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+      });
+      const note = e.evidence ? escapeHtml(e.evidence) : '<em style="opacity:0.6;">—</em>';
+      const reasoning = e.reasoning ? escapeHtml(e.reasoning) : '<em style="opacity:0.6;">—</em>';
+      return `
+        <tr>
+          <td>${when}</td>
+          <td>${escapeHtml(e.scenario)}</td>
+          <td class="note-cell">${note}</td>
+          <td class="note-cell">${reasoning}</td>
+          <td style="text-align:right;">${Number(e.prior).toFixed(1)}%</td>
+          <td style="text-align:right;">${Number(e.likeH).toFixed(1)}%</td>
+          <td style="text-align:right;">${Number(e.likeNotH).toFixed(1)}%</td>
+          <td style="text-align:right;" class="prob-cell">${Number(e.posterior).toFixed(1)}%</td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  /* =====================================================
+     DASHBOARD DATA (Google Sheets)
+     ===================================================== */
   async function fetchAllData() {
     fetchMoodData();
     fetchSectorMojoData();
@@ -544,7 +1088,7 @@
     document.getElementById('call-iv').innerText = Number(latest.callIv).toFixed(1) + '%';
     document.getElementById('skew-ratio').innerText = Number(latest.ratio).toFixed(2);
     document.getElementById('qqq-price').innerText = '$' + Number(latest.qqq).toFixed(2);
-    
+
     const now = new Date();
     document.getElementById('last-updated').innerText = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ', ' + now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
@@ -620,7 +1164,7 @@
     if (Math.abs(num) <= 1.0 && num !== 0) {
       return (num * 100).toFixed(2) + '%';
     }
-    
+
     return num.toFixed(2) + '%';
   }
 
@@ -715,6 +1259,9 @@
     document.getElementById('mojo-status').innerText = 'Live Feed Active';
   }
 
+  // Init
+  renderBayesHistory();
+  recomputePosterior();
   fetchAllData();
   setInterval(fetchAllData, 60000);
 </script>
