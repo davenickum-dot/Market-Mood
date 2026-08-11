@@ -374,6 +374,87 @@
       line-height: 1.4;
     }
 
+    .bayes-field label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Info icon + tooltip */
+    .info-icon {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
+      font-size: 0.68rem;
+      font-weight: 700;
+      font-style: normal;
+      cursor: help;
+      flex: none;
+      transition: border-color 0.2s ease, color 0.2s ease;
+    }
+
+    .info-icon:hover,
+    .info-icon:focus,
+    .info-icon.active {
+      border-color: var(--accent, #4da3ff);
+      color: var(--accent, #4da3ff);
+      outline: none;
+    }
+
+    .info-icon .info-tip {
+      position: absolute;
+      bottom: calc(100% + 8px);
+      left: 50%;
+      transform: translateX(-50%);
+      width: 260px;
+      max-width: 70vw;
+      background: #10151d;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 0.74rem;
+      font-weight: 400;
+      font-style: normal;
+      line-height: 1.5;
+      color: var(--text-main);
+      text-align: left;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.15s ease;
+      z-index: 50;
+    }
+
+    .info-icon .info-tip::after {
+      content: "";
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 6px solid transparent;
+      border-top-color: #10151d;
+    }
+
+    .info-icon .info-tip code {
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 4px;
+      padding: 1px 4px;
+      font-size: 0.72rem;
+    }
+
+    .info-icon:hover .info-tip,
+    .info-icon:focus .info-tip,
+    .info-icon.active .info-tip {
+      opacity: 1;
+      visibility: visible;
+    }
+
     .bayes-input,
     .bayes-textarea {
       width: 100%;
@@ -695,7 +776,9 @@
         </div>
 
         <div class="bayes-field">
-          <label for="prior">Prior probability P(H)</label>
+          <label for="prior">Prior probability P(H)
+            <span class="info-icon" tabindex="0" role="button" aria-label="What is the prior probability?" onclick="this.classList.toggle('active')">i<span class="info-tip"><strong>P(H)</strong> — the <em>prior</em>. Your probability that the scenario (the "hypothesis", H) is true <em>before</em> considering the new evidence. Example: you currently assign 80% to the Roaring 2020s.</span></span>
+          </label>
           <div class="bayes-input-suffix">
             <input type="number" id="prior" class="bayes-input" min="0" max="100" step="0.1" value="80" oninput="recomputePosterior()">
           </div>
@@ -703,7 +786,9 @@
         </div>
 
         <div class="bayes-field">
-          <label for="like-h">Likelihood if scenario TRUE · P(E | H)</label>
+          <label for="like-h">Likelihood if scenario TRUE · P(E | H)
+            <span class="info-icon" tabindex="0" role="button" aria-label="What does P(E given H) mean?" onclick="this.classList.toggle('active')">i<span class="info-tip"><strong>P(E | H)</strong> reads "the probability of the <strong>E</strong>vidence <em>given</em> that the <strong>H</strong>ypothesis is true." The <code>|</code> means "given" or "assuming". So: <em>if the scenario really is playing out, how likely was I to see this evidence?</em> Higher = the evidence fits the scenario well.</span></span>
+          </label>
           <div class="bayes-input-suffix">
             <input type="number" id="like-h" class="bayes-input" min="0" max="100" step="0.1" value="70" oninput="recomputePosterior()">
           </div>
@@ -711,7 +796,9 @@
         </div>
 
         <div class="bayes-field">
-          <label for="like-not-h">Likelihood if scenario FALSE · P(E | ¬H)</label>
+          <label for="like-not-h">Likelihood if scenario FALSE · P(E | ¬H)
+            <span class="info-icon" tabindex="0" role="button" aria-label="What does P(E given not H) mean?" onclick="this.classList.toggle('active')">i<span class="info-tip"><strong>P(E | ¬H)</strong> — the <code>¬</code> symbol means "not". So this reads "probability of the <strong>E</strong>vidence <em>given</em> the hypothesis is <strong>NOT</strong> true." <em>If the scenario is wrong, how likely was I to see this same evidence anyway?</em><br><br>This is <strong>independent</strong> of P(E | H) — the two need not sum to 100%. Their ratio is what moves your probability.</span></span>
+          </label>
           <div class="bayes-input-suffix">
             <input type="number" id="like-not-h" class="bayes-input" min="0" max="100" step="0.1" value="30" oninput="recomputePosterior()">
           </div>
